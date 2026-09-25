@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-nano lib/main.dartvoid main() {
+void main() {
   runApp(const MalWDarahemApp());
 }
 
@@ -70,7 +70,7 @@ class _HomePageState extends State<HomePage> {
                 leading: const Icon(Icons.account_balance_wallet, size: 40),
                 title: const Text('الرصيد'),
                 subtitle: Text(
-                  qbalance.toStringAsFixed(2),
+                  balance.toStringAsFixed(2),
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
