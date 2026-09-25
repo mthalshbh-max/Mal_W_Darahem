@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 void main() {
@@ -22,6 +21,18 @@ class MalWDarahemApp extends StatelessWidget {
   }
 }
 
+class Transaction {
+  final String type;
+  final double amount;
+  final DateTime date;
+
+  Transaction({
+    required this.type,
+    required this.amount,
+    required this.date,
+  });
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -33,36 +44,102 @@ class _HomePageState extends State<HomePage> {
   double balance = 0;
   double debts = 0;
 
+  final List<Transaction> transactions = [];
+
   void addMoney() async {
     final controller = TextEditingController();
+
     final amount = await showDialog<double>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('إضافة مال'),
-        content: TextField(controller: controller, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'المبلغ')),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'المبلغ'),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
-          ElevatedButton(onPressed: () { final value = double.tryParse(controller.text); if (value != null && value > 0) Navigator.pop(context, value); }, child: const Text('إضافة')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final value = double.tryParse(controller.text);
+              if (value != null && value > 0) {
+                Navigator.pop(context, value);
+              }
+            },
+            child: const Text('إضافة'),
+          ),
         ],
       ),
     );
-    if (amount != null) setState(() => balance += amount);
+
+    if (amount != null) {
+      setState(() {
+        balance += amount;
+        transactions.insert(
+          0,
+          Transaction(
+            type: 'إضافة مال',
+            amount: amount,
+            date: DateTime.now(),
+          ),
+        );
+      });
+    }
   }
 
   void addDebt() async {
     final controller = TextEditingController();
+
     final amount = await showDialog<double>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('إضافة دين'),
-        content: TextField(controller: controller, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'المبلغ')),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'المبلغ'),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
-          ElevatedButton(onPressed: () { final value = double.tryParse(controller.text); if (value != null && value > 0) Navigator.pop(context, value); }, child: const Text('إضافة')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final value = double.tryParse(controller.text);
+              if (value != null && value > 0) {
+                Navigator.pop(context, value);
+              }
+            },
+            child: const Text('إضافة'),
+          ),
         ],
       ),
     );
-    if (amount != null) setState(() => debts += amount);
+
+    if (amount != null) {
+      setState(() {
+        debts += amount;
+        transactions.insert(
+          0,
+          Transaction(
+            type: 'إضافة دين',
+            amount: amount,
+            date: DateTime.now(),
+          ),
+        );
+      });
+    }
+  }
+
+  String formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} '
+        '${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -87,7 +164,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 30),
             Card(
               child: ListTile(
-                leading: const Icon(Icons.account_balance_wallet, size: 40),
+                leading: const Icon(Icons.account_balance_wallet),
                 title: const Text('الرصيد'),
                 subtitle: Text(
                   balance.toStringAsFixed(2),
@@ -100,7 +177,7 @@ class _HomePageState extends State<HomePage> {
             ),
             Card(
               child: ListTile(
-                leading: const Icon(Icons.money_off, size: 40),
+                leading: const Icon(Icons.money_off),
                 title: const Text('الديون'),
                 subtitle: Text(
                   debts.toStringAsFixed(2),
@@ -128,6 +205,49 @@ class _HomePageState extends State<HomePage> {
                 icon: const Icon(Icons.receipt_long),
                 label: const Text('إضافة دين'),
               ),
+            ),
+            const SizedBox(height: 25),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'سجل العمليات',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: transactions.isEmpty
+                  ? const Center(
+                      child: Text('لا توجد عمليات حتى الآن'),
+                    )
+                  : ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = transactions[index];
+
+                        return Card(
+                          child: ListTile(
+                            leading: Icon(
+                              transaction.type == 'إضافة مال'
+                                  ? Icons.add_circle
+                                  : Icons.receipt_long,
+                            ),
+                            title: Text(transaction.type),
+                            subtitle: Text(formatDate(transaction.date)),
+                            trailing: Text(
+                              transaction.amount.toStringAsFixed(2),
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
