@@ -33,10 +33,20 @@ class _HomePageState extends State<HomePage> {
   double balance = 0;
   double debts = 0;
 
-  void addMoney() {
-    setState(() {
-      balance += 100;
-    });
+  void addMoney() async {
+    final controller = TextEditingController();
+    final amount = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إضافة مال'),
+        content: TextField(controller: controller, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'المبلغ')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          ElevatedButton(onPressed: () { final value = double.tryParse(controller.text); if (value != null && value > 0) Navigator.pop(context, value); }, child: const Text('إضافة')),
+        ],
+      ),
+    );
+    if (amount != null) setState(() => balance += amount);
   }
 
   void addDebt() {
