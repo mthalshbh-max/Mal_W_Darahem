@@ -49,10 +49,20 @@ class _HomePageState extends State<HomePage> {
     if (amount != null) setState(() => balance += amount);
   }
 
-  void addDebt() {
-    setState(() {
-      debts += 100;
-    });
+  void addDebt() async {
+    final controller = TextEditingController();
+    final amount = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إضافة دين'),
+        content: TextField(controller: controller, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'المبلغ')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          ElevatedButton(onPressed: () { final value = double.tryParse(controller.text); if (value != null && value > 0) Navigator.pop(context, value); }, child: const Text('إضافة')),
+        ],
+      ),
+    );
+    if (amount != null) setState(() => debts += amount);
   }
 
   @override
