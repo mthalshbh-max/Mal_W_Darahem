@@ -7,6 +7,38 @@ void main() {
 class MalWDarahemApp extends StatelessWidget {
   const MalWDarahemApp({super.key});
 
+  void showBackgroundColorPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        final colors = [
+          Colors.white,
+          const Color(0xFFE3F2FD),
+          const Color(0xFFE8F5E9),
+          const Color(0xFFFFF8E1),
+          const Color(0xFFF3E5F5),
+          const Color(0xFFECEFF1),
+        ];
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: colors.map((color) => GestureDetector(
+                onTap: () {
+                  setState(() => backgroundTint = color);
+                  Navigator.pop(context);
+                },
+                child: CircleAvatar(backgroundColor: color, radius: 30),
+              )).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -43,6 +75,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   double balance = 0;
   double debts = 0;
+  Color backgroundTint = Colors.white;
 
   final List<Transaction> transactions = [];
 
@@ -215,8 +248,9 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('مال ودراهم'),
         centerTitle: true,
+        actions: [IconButton(icon: const Icon(Icons.palette), onPressed: showBackgroundColorPicker)],
       ),
-      body: Padding(
+      body: Stack(children: [Positioned.fill(child: Image.asset('assets/images/app_background.png', fit: BoxFit.cover)), Positioned.fill(child: Container(color: backgroundTint.withOpacity(0.82))), Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
