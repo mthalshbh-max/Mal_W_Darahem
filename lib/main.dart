@@ -1,44 +1,10 @@
 import 'package:flutter/material.dart';
-
 void main() {
   runApp(const MalWDarahemApp());
 }
 
 class MalWDarahemApp extends StatelessWidget {
   const MalWDarahemApp({super.key});
-
-  void showBackgroundColorPicker() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        final colors = [
-          Colors.white,
-          const Color(0xFFE3F2FD),
-          const Color(0xFFE8F5E9),
-          const Color(0xFFFFF8E1),
-          const Color(0xFFF3E5F5),
-          const Color(0xFFECEFF1),
-        ];
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: colors.map((color) => GestureDetector(
-                onTap: () {
-                  setState(() => backgroundTint = color);
-                  Navigator.pop(context);
-                },
-                child: CircleAvatar(backgroundColor: color, radius: 30),
-              )).toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -77,8 +43,43 @@ class _HomePageState extends State<HomePage> {
   double debts = 0;
   Color backgroundTint = Colors.white;
 
-  final List<Transaction> transactions = [];
+  void showBackgroundColorPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        final colors = [
+          Colors.white,
+          const Color(0xFFE3F2FD),
+          const Color(0xFFE8F5E9),
+          const Color(0xFFFFF8E1),
+          const Color(0xFFF3E5F5),
+          const Color(0xFFECEFF1),
+        ];
 
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: colors.map((color) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => backgroundTint = color);
+                    Navigator.pop(context);
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: color,
+                    radius: 30,
+                  ),
+                );
+              }).toList(),
+         ),
+          ),
+      );
+      },
+    );
+  }
   Future<double?> askAmount(String title, {double? initialValue}) async {
     final controller = TextEditingController(
       text: initialValue == null ? '' : initialValue.toString(),
@@ -242,6 +243,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
