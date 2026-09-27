@@ -42,6 +42,7 @@ class _HomePageState extends State<HomePage> {
   double balance = 0;
   double debts = 0;
   Color backgroundTint = Colors.white;
+  final List<Transaction> transactions = [];
 
   void showBackgroundColorPicker() {
     showModalBottomSheet(
@@ -74,12 +75,13 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
               }).toList(),
-         ),
+            ),
           ),
-      );
+        );
       },
     );
   }
+
   Future<double?> askAmount(String title, {double? initialValue}) async {
     final controller = TextEditingController(
       text: initialValue == null ? '' : initialValue.toString(),
@@ -244,7 +246,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -252,7 +253,20 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         actions: [IconButton(icon: const Icon(Icons.palette), onPressed: showBackgroundColorPicker)],
       ),
-      body: Stack(children: [Positioned.fill(child: Image.asset('assets/images/app_background.png', fit: BoxFit.cover)), Positioned.fill(child: Container(color: backgroundTint.withOpacity(0.82))), Padding(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/app_background.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              color: backgroundTint.withOpacity(0.82),
+            ),
+          ),
+          Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
@@ -364,6 +378,8 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+        ],
       ),
     );
   }
