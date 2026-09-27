@@ -411,13 +411,29 @@ class _HomePageState extends State<HomePage> {
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(
-                  'assets/images/app_icon.png',
+                Container(
                   width: 42,
                   height: 42,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Image.asset('assets/images/app_icon.png', width: 34, height: 34);
-                  },
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.18),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/app_icon.png',
+                      width: 34,
+                      height: 34,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 const Text(
@@ -450,7 +466,7 @@ class _HomePageState extends State<HomePage> {
               Positioned.fill(
                 child: Container(
                   color: pageBackground.withOpacity(
-                    darkMode ? 0.82 : 0.35,
+                    darkMode ? 0.72 : 0.18,
                   ),
                 ),
               ),
