@@ -413,10 +413,10 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Image.asset(
                   'assets/images/app_icon.png',
-                  width: 34,
-                  height: 34,
+                  width: 42,
+                  height: 42,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.account_balance_wallet);
+                    return const Image.asset('assets/images/app_icon.png', width: 34, height: 34);
                   },
                 ),
                 const SizedBox(width: 8),
@@ -450,7 +450,7 @@ class _HomePageState extends State<HomePage> {
               Positioned.fill(
                 child: Container(
                   color: pageBackground.withOpacity(
-                    darkMode ? 0.94 : 0.88,
+                    darkMode ? 0.82 : 0.35,
                   ),
                 ),
               ),
