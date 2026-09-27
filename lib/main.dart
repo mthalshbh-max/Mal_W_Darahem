@@ -416,7 +416,7 @@ class _HomePageState extends State<HomePage> {
                   width: 42,
                   height: 42,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Image.asset('assets/images/app_icon.png', width: 34, height: 34);
+                    return Image.asset('assets/images/app_icon.png', width: 34, height: 34);
                   },
                 ),
                 const SizedBox(width: 8),
