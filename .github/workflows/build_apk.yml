@@ -25,6 +25,26 @@ jobs:
       - name: Create Android project
         run: flutter create --platforms=android .
 
+      - name: Prepare app icon
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+          mkdir -p /tmp/app_icon
+
+          convert assets/images/app_icon.png \
+            -resize 192x192 \
+            -background none \
+            -gravity center \
+            -extent 192x192 \
+            /tmp/app_icon/icon.png
+
+          convert /tmp/app_icon/icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          convert /tmp/app_icon/icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          convert /tmp/app_icon/icon.png -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          convert /tmp/app_icon/icon.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          convert /tmp/app_icon/icon.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
       - name: Build APK
         run: flutter build apk --release
 
