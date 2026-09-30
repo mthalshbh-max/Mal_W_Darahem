@@ -1,34 +1,43 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class Wallet {
-  String name;
-  String country;
-  String currency;
-  String flag;
-  double balance;
-
-  Wallet({
-    required this.name,
-    required this.country,
-    required this.currency,
-    required this.flag,
-    this.balance = 0,
-  });
-}
 void main() {
   runApp(const MalWDarahemApp());
 }
+
 class MalWDarahemApp extends StatelessWidget {
   const MalWDarahemApp({super.key});
 
-  static const emerald = Color(0xFF0F8B5F);
-  static const gold = Color(0xFFD9A441);
-  static const navy = Color(0xFF102A43);
-  static const red = Color(0xFFD64545);
-  static const blue = Color(0xFF2878D4);
-  static const lightGray = Color(0xFFF4F6F8);
+  void showBackgroundColorPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        final colors = [
+          Colors.white,
+          const Color(0xFFE3F2FD),
+          const Color(0xFFE8F5E9),
+          const Color(0xFFFFF8E1),
+          const Color(0xFFF3E5F5),
+          const Color(0xFFECEFF1),
+        ];
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: colors.map((color) => GestureDetector(
+                onTap: () {
+                  setState(() => backgroundTint = color);
+                  Navigator.pop(context);
+                },
+                child: CircleAvatar(backgroundColor: color, radius: 30),
+              )).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,35 +45,8 @@ class MalWDarahemApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'مال ودراهم',
       theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: emerald,
-          primary: emerald,
-          secondary: gold,
-        ),
-        scaffoldBackgroundColor: lightGray,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: emerald,
-          foregroundColor: Colors.white,
-          centerTitle: true,
-        ),
-        cardTheme: CardThemeData(
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: emerald,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        ),
       ),
       home: const HomePage(),
     );
@@ -86,122 +68,18 @@ class Transaction {
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  static const emerald = Color(0xFF0F8B5F);
-  static const gold = Color(0xFFD9A441);
-  static const navy = Color(0xFF102A43);
-  static const red = Color(0xFFD64545);
-  static const blue = Color(0xFF2878D4);
-
   double balance = 0;
-final List<Wallet> wallets = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    wallets.add(
-      Wallet(
-        name: 'المحفظة الرئيسية',
-        country: 'مصر',
-        currency: 'EGP',
-        flag: '🇪🇬',
-      ),
-    );
-  }
-
   double debts = 0;
-
   Color backgroundTint = Colors.white;
-  bool darkMode = false;
 
   final List<Transaction> transactions = [];
 
-  void showBackgroundColorPicker() {
-    final colors = [
-      Colors.white,
-      const Color(0xFFF4F6F8),
-      const Color(0xFFE8F5E9),
-      const Color(0xFFE3F2FD),
-      const Color(0xFFFFF8E1),
-      const Color(0xFFF3E5F5),
-      const Color(0xFFECEFF1),
-      const Color(0xFFE0F2F1),
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 25),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'مظهر التطبيق',
-                  style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.bold,
-           ),
-           ),
-            ],
-            ),
-            actions: [
-
-                IconButon(      ),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 14,
-                  runSpacing: 14,
-                  children: colors.map((color) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          backgroundTint = color;
-                          darkMode = false;
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: CircleAvatar(
-                        radius: 28,
-                        backgroundColor: color,
-                        child: backgroundTint == color
-                            ? const Icon(
-                                Icons.check,
-                                color: navy,
-                              )
-                            : null,
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20),
-                SwitchListTile(
-                  value: darkMode,
-                  onChanged: (value) {
-                    setState(() => darkMode = value);
-                    Navigator.pop(context);
-                  },
-                  secondary: const Icon(Icons.dark_mode),
-                  title: const Text('الوضع الداكن'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<double?> askAmount(
-    String title, {
-    double? initialValue,
-  }) async {
+  Future<double?> askAmount(String title, {double? initialValue}) async {
     final controller = TextEditingController(
       text: initialValue == null ? '' : initialValue.toString(),
     );
@@ -212,14 +90,8 @@ final List<Wallet> wallets = [];
         title: Text(title),
         content: TextField(
           controller: controller,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(
-            decimal: true,
-          ),
-          decoration: const InputDecoration(
-            labelText: 'المبلغ',
-            prefixIcon: Icon(Icons.attach_money),
-          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'المبلغ'),
         ),
         actions: [
           TextButton(
@@ -296,9 +168,6 @@ final List<Wallet> wallets = [];
             child: const Text('إلغاء'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: red,
-            ),
             onPressed: () {
               setState(() {
                 if (transaction.type == 'إضافة مال') {
@@ -347,13 +216,12 @@ final List<Wallet> wallets = [];
   void showTransactionOptions(int index) {
     showModalBottomSheet(
       context: context,
-      showDragHandle: true,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit, color: blue),
+              leading: const Icon(Icons.edit),
               title: const Text('تعديل العملية'),
               onTap: () {
                 Navigator.pop(context);
@@ -361,365 +229,138 @@ final List<Wallet> wallets = [];
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete, color: red),
+              leading: const Icon(Icons.delete),
               title: const Text('حذف العملية'),
               onTap: () {
                 Navigator.pop(context);
                 deleteTransaction(index);
               },
             ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
     );
   }
 
-  Widget moneyCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: color.withOpacity(0.12),
-              child: Icon(
-                icon,
-                color: color,
-                size: 30,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('مال ودراهم'),
+        centerTitle: true,
+        actions: [IconButton(icon: const Icon(Icons.palette), onPressed: showBackgroundColorPicker)],
       ),
-    );
-  }
-  void showWallets() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const Text(
-                'المحافظ',
+      body: Stack(children: [Positioned.fill(child: Image.asset('assets/images/app_background.png', fit: BoxFit.cover)), Positioned.fill(child: Container(color: backgroundTint.withOpacity(0.82))), Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              'إدارة أموالك بسهولة',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 30),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.account_balance_wallet),
+                title: const Text('الرصيد'),
+                subtitle: Text(
+                  balance.toStringAsFixed(2),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.money_off),
+                title: const Text('الديون'),
+                subtitle: Text(
+                  debts.toStringAsFixed(2),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: addMoney,
+                icon: const Icon(Icons.add),
+                label: const Text('إضافة مال'),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: addDebt,
+                icon: const Icon(Icons.receipt_long),
+                label: const Text('إضافة دين'),
+              ),
+            ),
+            const SizedBox(height: 25),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'سجل العمليات',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 10),
-              ...wallets.map(
-                (wallet) => Card(
-                  child: ListTile(
-                    leading: Text(
-                      wallet.flag,
-                      style: const TextStyle(fontSize: 28),
-                    ),
-                    title: Text(wallet.name),
-                    subtitle: Text(
-                      '${wallet.country} - ${wallet.currency}',
-                    ),
-                    trailing: Text(
-                      '${wallet.balance} ${wallet.currency}',
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-  Widget build(BuildContext context) {
-    final foreground = darkMode ? Colors.white : navy;
-    final pageBackground =
-        darkMode ? const Color(0xFF0B1724) : backgroundTint;
-
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          brightness: darkMode ? Brightness.dark : Brightness.light,
-          scaffoldBackgroundColor: pageBackground,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: emerald,
-            brightness: darkMode ? Brightness.dark : Brightness.light,
-          ),
-        ),
-        child: Scaffold(
-          appBar: AppBar(
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.18),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/app_icon.png',
-                      width: 34,
-                      height: 34,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'مال ودراهم',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-
-                ),
-              ],
             ),
-            actions: [
-                IconButton(
-                  tooltip: 'المحافظ',
-                  icon: const Icon(Icons.account_balance_wallet_outlined),
-                  onPressed: showWallets,
-                ),
-                IconButton(
-                  tooltip: 'المظهر',
-                  icon: const Icon(Icons.palette_outlined),
-                  onPressed: showBackgroundColorPicker,
-                ),
-              ],
-          ),
-          body: Stack(
-            children: [
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/app_background.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-              Positioned.fill(
-                child: Container(
-                  color: pageBackground.withOpacity(
-                    darkMode ? 0.72 : 0.18,
-                  ),
-                ),
-              ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
-                  child: Column(
-                    children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          'إدارة أموالك بسهولة',
-                          style: TextStyle(
-                            fontSize: 27,
-                            fontWeight: FontWeight.bold,
-                            color: foreground,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          'تابع أموالك وديونك في مكان واحد',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: foreground.withOpacity(0.70),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      moneyCard(
-                        title: 'الرصيد الحالي',
-                        value: balance.toStringAsFixed(2),
-                        icon: Icons.account_balance_wallet,
-                        color: emerald,
-                      ),
-                      moneyCard(
-                        title: 'إجمالي الديون',
-                        value: debts.toStringAsFixed(2),
-                        icon: Icons.receipt_long,
-                        color: red,
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: addMoney,
-                              icon: const Icon(Icons.add_circle_outline),
-                              label: const Text('إضافة مال'),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: gold,
-                                foregroundColor: navy,
-                              ),
-                              onPressed: addDebt,
-                              icon: const Icon(Icons.receipt_long),
-                              label: const Text('إضافة دين'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          'سجل العمليات',
-                          style: TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.bold,
-                            color: foreground,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: transactions.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.receipt_long_outlined,
-                                      size: 55,
-                                      color: foreground.withOpacity(0.35),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      'لا توجد عمليات حتى الآن',
-                                      style: TextStyle(
-                                        color: foreground.withOpacity(0.65),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                itemCount: transactions.length,
-                                itemBuilder: (context, index) {
-                                  final transaction =
-                                      transactions[index];
-                                  final isMoney =
-                                      transaction.type == 'إضافة مال';
+            const SizedBox(height: 10),
+            Expanded(
+              child: transactions.isEmpty
+                  ? const Center(
+                      child: Text('لا توجد عمليات حتى الآن'),
+                    )
+                  : ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = transactions[index];
 
-                                  return Card(
-                                    child: ListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
-                                      ),
-                                      leading: CircleAvatar(
-                                        backgroundColor:
-                                            (isMoney ? emerald : red)
-                                                .withOpacity(0.12),
-                                        child: Icon(
-                                          isMoney
-                                              ? Icons.add_circle
-                                              : Icons.receipt_long,
-                                          color:
-                                              isMoney ? emerald : red,
-                                        ),
-                                      ),
-                                      title: Text(
-                                        transaction.type,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      subtitle: Text(
-                                        formatDate(transaction.date),
-                                      ),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            transaction.amount
-                                                .toStringAsFixed(2),
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: isMoney
-                                                  ? emerald
-                                                  : red,
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.more_vert,
-                                            ),
-                                            onPressed: () =>
-                                                showTransactionOptions(
-                                              index,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+                        return Card(
+                          child: ListTile(
+                            leading: Icon(
+                              transaction.type == 'إضافة مال'
+                                  ? Icons.add_circle
+                                  : Icons.receipt_long,
+                            ),
+                            title: Text(transaction.type),
+                            subtitle: Text(formatDate(transaction.date)),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  transaction.amount.toStringAsFixed(2),
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.more_vert),
+                                  onPressed: () =>
+                                      showTransactionOptions(index),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
     );
