@@ -1,9 +1,25 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+class Wallet {
+  String name;
+  String country;
+  String currency;
+  String flag;
+  double balance;
+
+  Wallet({
+    required this.name,
+    required this.country,
+    required this.currency,
+    required this.flag,
+    this.balance = 0,
+  });
+}
 void main() {
   runApp(const MalWDarahemApp());
 }
-
 class MalWDarahemApp extends StatelessWidget {
   const MalWDarahemApp({super.key});
 
@@ -70,7 +86,7 @@ class Transaction {
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  @override
+  void showWallets()
   State<HomePage> createState() => _HomePageState();
 }
 
@@ -82,6 +98,22 @@ class _HomePageState extends State<HomePage> {
   static const blue = Color(0xFF2878D4);
 
   double balance = 0;
+final List<Wallet> wallets = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    wallets.add(
+      Wallet(
+        name: 'المحفظة الرئيسية',
+        country: 'مصر',
+        currency: 'EGP',
+        flag: '🇪🇬',
+      ),
+    );
+  }
+
   double debts = 0;
 
   Color backgroundTint = Colors.white;
@@ -116,8 +148,13 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 21,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
+           ),
+           ),
+            ],
+            ),
+            actions: [
+
+                IconButon(      ),
                 const SizedBox(height: 18),
                 Wrap(
                   spacing: 14,
@@ -388,8 +425,46 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  @override
+  void showWallets() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const Text(
+                'المحافظ',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...wallets.map(
+                (wallet) => Card(
+                  child: ListTile(
+                    leading: Text(
+                      wallet.flag,
+                      style: const TextStyle(fontSize: 28),
+                    ),
+                    title: Text(wallet.name),
+                    subtitle: Text(
+                      '${wallet.country} - ${wallet.currency}',
+                    ),
+                    trailing: Text(
+                      '${wallet.balance} ${wallet.currency}',
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
   Widget build(BuildContext context) {
     final foreground = darkMode ? Colors.white : navy;
     final pageBackground =
@@ -441,16 +516,22 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
+
                 ),
               ],
             ),
             actions: [
-              IconButton(
-                tooltip: 'المظهر',
-                icon: const Icon(Icons.palette_outlined),
-                onPressed: showBackgroundColorPicker,
-              ),
-            ],
+                IconButton(
+                  tooltip: 'المحافظ',
+                  icon: const Icon(Icons.account_balance_wallet_outlined),
+                  onPressed: showWallets,
+                ),
+                IconButton(
+                  tooltip: 'المظهر',
+                  icon: const Icon(Icons.palette_outlined),
+                  onPressed: showBackgroundColorPicker,
+                ),
+              ],
           ),
           body: Stack(
             children: [
