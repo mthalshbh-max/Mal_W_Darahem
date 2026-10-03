@@ -67,6 +67,22 @@ class Transaction {
   });
 }
 
+class Wallet {
+  String name;
+  String country;
+  String currency;
+  String flag;
+  double balance;
+
+  Wallet({
+    required this.name,
+    required this.country,
+    required this.currency,
+    required this.flag,
+    this.balance = 0,
+  });
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -88,6 +104,64 @@ class _HomePageState extends State<HomePage> {
   bool darkMode = false;
 
   final List<Transaction> transactions = [];
+  final List<Wallet> wallets = [];
+
+
+
+  void showWallets() {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 25),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'المحافظ',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                if (wallets.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text(
+                      'لا توجد محافظ مضافة حاليًا',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  )
+                else
+                  ...wallets.map(
+                    (wallet) => ListTile(
+                      leading: Text(
+                        wallet.flag,
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                      title: Text(wallet.name),
+                      subtitle: Text(
+                        '${wallet.country} • ${wallet.currency}',
+                      ),
+                      trailing: Text(
+                        wallet.balance.toStringAsFixed(2),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void showBackgroundColorPicker() {
     final colors = [
@@ -445,6 +519,11 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             actions: [
+              IconButton(
+                tooltip: 'المحافظ',
+                icon: const Icon(Icons.account_balance_wallet_outlined),
+                onPressed: showWallets,
+              ),
               IconButton(
                 tooltip: 'المظهر',
                 icon: const Icon(Icons.palette_outlined),
