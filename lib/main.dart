@@ -391,6 +391,239 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void showWithdrawDialog(Wallet wallet) {
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('سحب من ${wallet.name}'),
+          content: TextField(
+            controller: amountController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            decoration: InputDecoration(
+              labelText: 'مبلغ السحب',
+              suffixText: wallet.currency,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final amount = double.tryParse(
+                  amountController.text.trim().replaceAll(',', '.'),
+                );
+
+                if (amount == null || amount <= 0) {
+                  return;
+                }
+
+                if (amount > wallet.balance) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('الرصيد غير كافٍ لإتمام عملية السحب'),
+                    ),
+                  );
+                  return;
+                }
+
+                setState(() {
+                  wallet.balance -= amount;
+                });
+
+                await _saveWallets();
+
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+              },
+              icon: const Icon(Icons.remove),
+              label: const Text('سحب'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showDepositDialog(Wallet wallet) {
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('إيداع في ${wallet.name}'),
+          content: TextField(
+            controller: amountController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            decoration: InputDecoration(
+              labelText: 'مبلغ الإيداع',
+              suffixText: wallet.currency,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final amount = double.tryParse(
+                  amountController.text.trim().replaceAll(',', '.'),
+                );
+
+                if (amount == null || amount <= 0) {
+                  return;
+                }
+
+                setState(() {
+                  wallet.balance += amount;
+                });
+
+                await _saveWallets();
+
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('إيداع'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showTransferDialog(Wallet sourceWallet) {
+    final amountController = TextEditingController();
+    Wallet? destinationWallet;
+
+    final availableWallets = wallets
+        .where((wallet) => !identical(wallet, sourceWallet))
+        .toList();
+
+    if (availableWallets.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('أضف محفظة أخرى أولًا لإجراء التحويل'),
+        ),
+      );
+      return;
+    }
+
+    destinationWallet = availableWallets.first;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('تحويل من ${sourceWallet.name}'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<Wallet>(
+                    value: destinationWallet,
+                    decoration: const InputDecoration(
+                      labelText: 'المحفظة المستقبلة',
+                    ),
+                    items: availableWallets.map(
+                      (wallet) => DropdownMenuItem<Wallet>(
+                        value: wallet,
+                        child: Text(
+                          '${wallet.flag} ${wallet.name} (${wallet.currency})',
+                        ),
+                      ),
+                    ).toList(),
+                    onChanged: (wallet) {
+                      setDialogState(() {
+                        destinationWallet = wallet;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: amountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'مبلغ التحويل',
+                      suffixText: sourceWallet.currency,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('إلغاء'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final amount = double.tryParse(
+                      amountController.text.trim().replaceAll(',', '.'),
+                    );
+
+                    if (destinationWallet == null) {
+                      return;
+                    }
+
+                    if (amount == null || amount <= 0) {
+                      return;
+                    }
+
+                    if (amount > sourceWallet.balance) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('الرصيد غير كافٍ لإتمام التحويل'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (sourceWallet.currency !=
+                        destinationWallet!.currency) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'التحويل بين عملات مختلفة يحتاج إلى سعر صرف',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      sourceWallet.balance -= amount;
+                      destinationWallet!.balance += amount;
+                    });
+
+                    await _saveWallets();
+
+                    if (!mounted) return;
+                    Navigator.pop(dialogContext);
+                  },
+                  icon: const Icon(Icons.swap_horiz),
+                  label: const Text('تحويل'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void showWallets() {
     showModalBottomSheet(
       context: context,
@@ -411,6 +644,45 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 15),
+
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.person_outline),
+                            SizedBox(width: 8),
+                            Text(
+                              'بيانات العميل',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          customer.name.isEmpty
+                              ? 'لم يتم إدخال اسم العميل'
+                              : 'الاسم: ${customer.name}',
+                        ),
+                        if (customer.phone.isNotEmpty)
+                          Text('الهاتف: ${customer.phone}'),
+                        if (customer.country.isNotEmpty)
+                          Text('الدولة: ${customer.country}'),
+                        if (customer.currency.isNotEmpty)
+                          Text('العملة الأساسية: ${customer.currency}'),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
                 if (wallets.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(20),
@@ -421,19 +693,57 @@ class _HomePageState extends State<HomePage> {
                   )
                 else
                   ...wallets.map(
-                    (wallet) => ListTile(
-                      leading: Text(
-                        wallet.flag,
-                        style: const TextStyle(fontSize: 28),
-                      ),
-                      title: Text(wallet.name),
-                      subtitle: Text(
-                        '${wallet.country} • ${wallet.currency}',
-                      ),
-                      trailing: Text(
-                        wallet.balance.toStringAsFixed(2),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
+                    (wallet) => Card(
+                      child: ListTile(
+                        leading: Text(
+                          wallet.flag,
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                        title: Text(wallet.name),
+                        subtitle: Text(
+                          '${wallet.country} • ${wallet.currency}',
+                        ),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${wallet.balance.toStringAsFixed(2)} ${wallet.currency}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextButton.icon(
+                                  onPressed: () => showDepositDialog(wallet),
+                                  icon: const Icon(
+                                    Icons.add_circle_outline,
+                                    size: 18,
+                                  ),
+                                  label: const Text('إيداع'),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => showWithdrawDialog(wallet),
+                                  icon: const Icon(
+                                    Icons.remove_circle_outline,
+                                    size: 18,
+                                  ),
+                                  label: const Text('سحب'),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => showTransferDialog(wallet),
+                                  icon: const Icon(
+                                    Icons.swap_horiz,
+                                    size: 18,
+                                  ),
+                                  label: const Text('تحويل'),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
