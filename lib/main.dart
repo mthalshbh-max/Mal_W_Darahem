@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MalWDarahemApp());
@@ -72,6 +73,22 @@ class Transaction {
 }
 
 class Wallet {
+  Map<String, dynamic> toJson() => {
+    "name": name,
+    "country": country,
+    "currency": currency,
+    "flag": flag,
+    "balance": balance,
+  };
+
+  factory Wallet.fromJson(Map<String, dynamic> json) => Wallet(
+    name: json["name"] as String,
+    country: json["country"] as String,
+    currency: json["currency"] as String,
+    flag: json["flag"] as String,
+    balance: (json["balance"] as num?)?.toDouble() ?? 0,
+  );
+
   String name;
   String country;
   String currency;
@@ -99,6 +116,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadWalletSecurity();
+    _loadWallets();
   }
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
@@ -119,6 +137,30 @@ class _HomePageState extends State<HomePage> {
   bool _walletsUnlocked = false;
   bool _hasWalletPin = false;
 
+
+
+  Future<void> _loadWallets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList("wallets");
+    if (saved == null) return;
+    final loaded = saved.map((item) {
+      return Wallet.fromJson(jsonDecode(item) as Map<String, dynamic>);
+    }).toList();
+    if (!mounted) return;
+    setState(() {
+      wallets
+        ..clear()
+        ..addAll(loaded);
+    });
+  }
+
+  Future<void> _saveWallets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = wallets
+        .map((wallet) => jsonEncode(wallet.toJson()))
+        .toList();
+    await prefs.setStringList("wallets", saved);
+  }
 
 
   Future<void> _loadWalletSecurity() async {
@@ -233,9 +275,115 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: showAddWalletDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('إضافة محفظة'),
+                  ),
+                ),
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void showAddWalletDialog() {
+    final nameController = TextEditingController();
+    final countryController = TextEditingController();
+    final currencyController = TextEditingController();
+    final flagController = TextEditingController(text: '🇪🇬');
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('إضافة محفظة'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم المحفظة',
+                    hintText: 'مثال: محفظتي',
+                  ),
+                ),
+                TextField(
+                  controller: countryController,
+                  decoration: const InputDecoration(
+                    labelText: 'الدولة',
+                    hintText: 'مثال: مصر',
+                  ),
+                ),
+                TextField(
+                  controller: currencyController,
+                  decoration: const InputDecoration(
+                    labelText: 'العملة',
+                    hintText: 'مثال: EGP',
+                  ),
+                ),
+                TextField(
+                  controller: flagController,
+                  decoration: const InputDecoration(
+                    labelText: 'العلم',
+                    hintText: 'مثال: 🇪🇬',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+                final country = countryController.text.trim();
+                final currency = currencyController.text.trim();
+                final flag = flagController.text.trim();
+
+                if (name.isEmpty ||
+                    country.isEmpty ||
+                    currency.isEmpty ||
+                    flag.isEmpty) {
+                  return;
+                }
+
+                if (wallets.any(
+                  (wallet) =>
+                      wallet.name.toLowerCase() == name.toLowerCase(),
+                )) {
+                  return;
+                }
+
+                final wallet = Wallet(
+                  name: name,
+                  country: country,
+                  currency: currency.toUpperCase(),
+                  flag: flag,
+                  balance: 0,
+                );
+
+                setState(() {
+                  wallets.add(wallet);
+                });
+
+                await _saveWallets();
+
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('حفظ'),
+            ),
+          ],
         );
       },
     );
