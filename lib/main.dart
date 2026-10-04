@@ -1266,7 +1266,7 @@ class _HomePageState extends State<HomePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: red,
             ),
-            onPressed: () {
+            onPressed: () async {
               setState(() {
                 if (transaction.type == 'إضافة مال') {
                   balance -= transaction.amount;
