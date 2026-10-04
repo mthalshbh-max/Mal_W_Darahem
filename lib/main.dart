@@ -488,12 +488,30 @@ class _HomePageState extends State<HomePage> {
 
                 setState(() {
                   wallet.balance -= amount;
+
+                  transactions.insert(
+                    0,
+                    Transaction(
+                      type: 'سحب من ${wallet.name} - ${wallet.currency}',
+                      amount: amount,
+                      date: DateTime.now(),
+                    ),
+                  );
                 });
 
                 await _saveWallets();
+                await _saveTransactions();
 
                 if (!mounted) return;
                 Navigator.pop(dialogContext);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'تم سحب ${amount.toStringAsFixed(2)} ${wallet.currency}',
+                    ),
+                  ),
+                );
               },
               icon: const Icon(Icons.remove),
               label: const Text('سحب'),
@@ -539,12 +557,30 @@ class _HomePageState extends State<HomePage> {
 
                 setState(() {
                   wallet.balance += amount;
+
+                  transactions.insert(
+                    0,
+                    Transaction(
+                      type: 'إيداع في ${wallet.name} - ${wallet.currency}',
+                      amount: amount,
+                      date: DateTime.now(),
+                    ),
+                  );
                 });
 
                 await _saveWallets();
+                await _saveTransactions();
 
                 if (!mounted) return;
                 Navigator.pop(dialogContext);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'تم إيداع ${amount.toStringAsFixed(2)} ${wallet.currency}',
+                    ),
+                  ),
+                );
               },
               icon: const Icon(Icons.add),
               label: const Text('إيداع'),
@@ -822,9 +858,20 @@ class _HomePageState extends State<HomePage> {
                     setState(() {
                       sourceWallet.balance -= amount;
                       destinationWallet!.balance += amount;
+
+                      transactions.insert(
+                        0,
+                        Transaction(
+                          type:
+                              'تحويل من ${sourceWallet.name} إلى ${destinationWallet!.name} - ${sourceWallet.currency}',
+                          amount: amount,
+                          date: DateTime.now(),
+                        ),
+                      );
                     });
 
                     await _saveWallets();
+                    await _saveTransactions();
 
                     if (!mounted) return;
                     Navigator.pop(dialogContext);
@@ -1270,8 +1317,10 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 if (transaction.type == 'إضافة مال') {
                   balance -= transaction.amount;
-                } else {
+                  if (balance < 0) balance = 0;
+                } else if (transaction.type == 'إضافة دين') {
                   debts -= transaction.amount;
+                  if (debts < 0) debts = 0;
                 }
 
                 transactions.removeAt(index);
@@ -1302,8 +1351,10 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         if (transaction.type == 'إضافة مال') {
           balance = balance - transaction.amount + newAmount;
-        } else {
+          if (balance < 0) balance = 0;
+        } else if (transaction.type == 'إضافة دين') {
           debts = debts - transaction.amount + newAmount;
+          if (debts < 0) debts = 0;
         }
 
         transaction.amount = newAmount;
