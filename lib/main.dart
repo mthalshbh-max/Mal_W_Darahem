@@ -502,6 +502,168 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void showPersonTransferDialog() {
+    if (wallets.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('أضف محفظة أولًا لإجراء التحويل'),
+        ),
+      );
+      return;
+    }
+
+    Wallet sourceWallet = wallets.first;
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('تحويل إلى شخص آخر'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<Wallet>(
+                      value: sourceWallet,
+                      decoration: const InputDecoration(
+                        labelText: 'المحفظة المرسلة',
+                      ),
+                      items: wallets.map(
+                        (wallet) => DropdownMenuItem<Wallet>(
+                          value: wallet,
+                          child: Text(
+                            '${wallet.flag} ${wallet.name} (${wallet.currency})',
+                          ),
+                        ),
+                      ).toList(),
+                      onChanged: (wallet) {
+                        if (wallet == null) return;
+                        setDialogState(() {
+                          sourceWallet = wallet;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'اسم المستلم',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'رقم هاتف المستلم',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'مبلغ التحويل',
+                        suffixText: sourceWallet.currency,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('إلغاء'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    final phone = phoneController.text.trim();
+                    final amount = double.tryParse(
+                      amountController.text.trim().replaceAll(',', '.'),
+                    );
+
+                    if (name.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('أدخل اسم المستلم'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (phone.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('أدخل رقم هاتف المستلم'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (amount == null || amount <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('أدخل مبلغًا صحيحًا للتحويل'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (amount > sourceWallet.balance) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'الرصيد غير كافٍ لإتمام التحويل',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      sourceWallet.balance -= amount;
+                      transactions.insert(
+                        0,
+                        Transaction(
+                          type: 'تحويل إلى $name - $phone',
+                          amount: amount,
+                          date: DateTime.now(),
+                        ),
+                      );
+                    });
+
+                    await _saveWallets();
+
+                    if (!mounted) return;
+                    Navigator.pop(dialogContext);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'تم تسجيل تحويل $amount ${sourceWallet.currency} إلى $name',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.send_outlined),
+                  label: const Text('تحويل'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void showTransferDialog(Wallet sourceWallet) {
     final amountController = TextEditingController();
     Wallet? destinationWallet;
@@ -749,6 +911,15 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: showPersonTransferDialog,
+                    icon: const Icon(Icons.person_add_alt_1_outlined),
+                    label: const Text('تحويل لشخص'),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
