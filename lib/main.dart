@@ -72,6 +72,34 @@ class Transaction {
   });
 }
 
+class Customer {
+  String name;
+  String phone;
+  String country;
+  String currency;
+
+  Customer({
+    this.name = '',
+    this.phone = '',
+    this.country = '',
+    this.currency = '',
+  });
+
+  Map<String, dynamic> toJson() => {
+    "name": name,
+    "phone": phone,
+    "country": country,
+    "currency": currency,
+  };
+
+  factory Customer.fromJson(Map<String, dynamic> json) => Customer(
+    name: json["name"] as String? ?? '',
+    phone: json["phone"] as String? ?? '',
+    country: json["country"] as String? ?? '',
+    currency: json["currency"] as String? ?? '',
+  );
+}
+
 class Wallet {
   Map<String, dynamic> toJson() => {
     "name": name,
@@ -79,6 +107,7 @@ class Wallet {
     "currency": currency,
     "flag": flag,
     "balance": balance,
+    "customerPhone": customerPhone,
   };
 
   factory Wallet.fromJson(Map<String, dynamic> json) => Wallet(
@@ -87,6 +116,7 @@ class Wallet {
     currency: json["currency"] as String,
     flag: json["flag"] as String,
     balance: (json["balance"] as num?)?.toDouble() ?? 0,
+    customerPhone: json["customerPhone"] as String? ?? '',
   );
 
   String name;
@@ -94,6 +124,7 @@ class Wallet {
   String currency;
   String flag;
   double balance;
+  String customerPhone;
 
   Wallet({
     required this.name,
@@ -101,6 +132,7 @@ class Wallet {
     required this.currency,
     required this.flag,
     this.balance = 0,
+    this.customerPhone = '',
   });
 }
 
@@ -115,8 +147,13 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadWalletSecurity();
-    _loadWallets();
+    _initializeAppData();
+  }
+
+  Future<void> _initializeAppData() async {
+    await _loadWalletSecurity();
+    await _loadCustomer();
+    await _loadWallets();
   }
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
@@ -134,10 +171,35 @@ class _HomePageState extends State<HomePage> {
 
   final List<Transaction> transactions = [];
   final List<Wallet> wallets = [];
+  Customer customer = Customer();
   bool _walletsUnlocked = false;
   bool _hasWalletPin = false;
 
 
+
+  Future<void> _loadCustomer() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString("customer");
+
+    if (saved == null || saved.isEmpty) return;
+
+    final loaded =
+        Customer.fromJson(jsonDecode(saved) as Map<String, dynamic>);
+
+    if (!mounted) return;
+
+    setState(() {
+      customer = loaded;
+    });
+  }
+
+  Future<void> _saveCustomer() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      "customer",
+      jsonEncode(customer.toJson()),
+    );
+  }
 
   Future<void> _loadWallets() async {
     final prefs = await SharedPreferences.getInstance();
@@ -146,12 +208,23 @@ class _HomePageState extends State<HomePage> {
     final loaded = saved.map((item) {
       return Wallet.fromJson(jsonDecode(item) as Map<String, dynamic>);
     }).toList();
+
+    if (customer.phone.isNotEmpty) {
+      for (final wallet in loaded) {
+        if (wallet.customerPhone.isEmpty) {
+          wallet.customerPhone = customer.phone;
+        }
+      }
+    }
+
     if (!mounted) return;
     setState(() {
       wallets
         ..clear()
         ..addAll(loaded);
     });
+
+    await _saveWallets();
   }
 
   Future<void> _saveWallets() async {
@@ -227,6 +300,96 @@ class _HomePageState extends State<HomePage> {
     return _hashWalletPin(pin, salt) == savedHash;
   }
 
+
+  void showCustomerData() {
+    final nameController = TextEditingController(text: customer.name);
+    final phoneController = TextEditingController(text: customer.phone);
+    final countryController = TextEditingController(text: customer.country);
+    final currencyController = TextEditingController(text: customer.currency);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('بيانات العميل'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم العميل',
+                    hintText: 'مثال: محمود',
+                  ),
+                ),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'رقم الهاتف',
+                    hintText: 'مثال: 01xxxxxxxxx',
+                  ),
+                ),
+                TextField(
+                  controller: countryController,
+                  decoration: const InputDecoration(
+                    labelText: 'الدولة',
+                    hintText: 'مثال: مصر',
+                  ),
+                ),
+                TextField(
+                  controller: currencyController,
+                  decoration: const InputDecoration(
+                    labelText: 'العملة الأساسية',
+                    hintText: 'مثال: EGP',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final name = nameController.text.trim();
+                final phone = phoneController.text.trim();
+                final country = countryController.text.trim();
+                final currency =
+                    currencyController.text.trim().toUpperCase();
+
+                if (name.isEmpty ||
+                    phone.isEmpty ||
+                    country.isEmpty ||
+                    currency.isEmpty) {
+                  return;
+                }
+
+                setState(() {
+                  customer = Customer(
+                    name: name,
+                    phone: phone,
+                    country: country,
+                    currency: currency,
+                  );
+                });
+
+                await _saveCustomer();
+
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+              },
+              icon: const Icon(Icons.save_outlined),
+              label: const Text('حفظ'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void showWallets() {
     showModalBottomSheet(
@@ -370,6 +533,7 @@ class _HomePageState extends State<HomePage> {
                   currency: currency.toUpperCase(),
                   flag: flag,
                   balance: 0,
+                  customerPhone: customer.phone,
                 );
 
                 setState(() {
@@ -745,6 +909,11 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             actions: [
+              IconButton(
+                tooltip: 'بيانات العميل',
+                icon: const Icon(Icons.person_outline),
+                onPressed: showCustomerData,
+              ),
               IconButton(
                 tooltip: 'المحافظ',
                 icon: const Icon(Icons.account_balance_wallet_outlined),
