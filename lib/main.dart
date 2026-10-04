@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main() {
   runApp(const MalWDarahemApp());
@@ -91,6 +95,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    _loadWalletSecurity();
+  }
+
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   static const emerald = Color(0xFF0F8B5F);
   static const gold = Color(0xFFD9A441);
   static const navy = Color(0xFF102A43);
@@ -105,7 +116,74 @@ class _HomePageState extends State<HomePage> {
 
   final List<Transaction> transactions = [];
   final List<Wallet> wallets = [];
+  bool _walletsUnlocked = false;
+  bool _hasWalletPin = false;
 
+
+
+  Future<void> _loadWalletSecurity() async {
+    final hash = await _secureStorage.read(key: 'wallet_pin_hash');
+    final salt = await _secureStorage.read(key: 'wallet_pin_salt');
+
+    if (!mounted) return;
+    setState(() {
+      _hasWalletPin =
+          hash != null &&
+          hash.isNotEmpty &&
+          salt != null &&
+          salt.isNotEmpty;
+    });
+  }
+
+  String _hashWalletPin(String pin, String salt) {
+    return sha256.convert(
+      utf8.encode('$salt:$pin'),
+    ).toString();
+  }
+
+  String _generateWalletSalt() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(
+      32,
+      (_) => random.nextInt(256),
+    );
+    return base64UrlEncode(bytes);
+  }
+
+  Future<void> _saveWalletPin(String pin) async {
+    final salt = _generateWalletSalt();
+    final hash = _hashWalletPin(pin, salt);
+
+    await _secureStorage.write(
+      key: 'wallet_pin_salt',
+      value: salt,
+    );
+    await _secureStorage.write(
+      key: 'wallet_pin_hash',
+      value: hash,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _hasWalletPin = true;
+      _walletsUnlocked = true;
+    });
+  }
+
+  Future<bool> _verifyWalletPin(String pin) async {
+    final salt = await _secureStorage.read(
+      key: 'wallet_pin_salt',
+    );
+    final savedHash = await _secureStorage.read(
+      key: 'wallet_pin_hash',
+    );
+
+    if (salt == null || savedHash == null) {
+      return false;
+    }
+
+    return _hashWalletPin(pin, salt) == savedHash;
+  }
 
 
   void showWallets() {
