@@ -154,6 +154,7 @@ class _HomePageState extends State<HomePage> {
     await _loadWalletSecurity();
     await _loadCustomer();
     await _loadWallets();
+    await _loadTransactions();
   }
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
@@ -199,6 +200,58 @@ class _HomePageState extends State<HomePage> {
       "customer",
       jsonEncode(customer.toJson()),
     );
+  }
+
+  Future<void> _loadTransactions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList("transactions");
+
+    if (saved == null) return;
+
+    final loaded = <Transaction>[];
+
+    for (final item in saved) {
+      try {
+        final json = jsonDecode(item) as Map<String, dynamic>;
+
+        loaded.add(
+          Transaction(
+            type: json["type"] as String? ?? '',
+            amount: (json["amount"] as num?)?.toDouble() ?? 0,
+            date: DateTime.tryParse(
+                  json["date"] as String? ?? '',
+                ) ??
+                DateTime.now(),
+          ),
+        );
+      } catch (_) {
+        // تجاهل أي معاملة قديمة غير صالحة بدل تعطيل التطبيق.
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      transactions
+        ..clear()
+        ..addAll(loaded);
+    });
+  }
+
+  Future<void> _saveTransactions() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final saved = transactions
+        .map(
+          (transaction) => jsonEncode({
+            "type": transaction.type,
+            "amount": transaction.amount,
+            "date": transaction.date.toIso8601String(),
+          }),
+        )
+        .toList();
+
+    await prefs.setStringList("transactions", saved);
   }
 
   Future<void> _loadWallets() async {
@@ -641,6 +694,7 @@ class _HomePageState extends State<HomePage> {
                     });
 
                     await _saveWallets();
+                    await _saveTransactions();
 
                     if (!mounted) return;
                     Navigator.pop(dialogContext);
@@ -1164,6 +1218,8 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       });
+
+      await _saveTransactions();
     }
   }
 
@@ -1182,6 +1238,8 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       });
+
+      await _saveTransactions();
     }
   }
 
@@ -1191,7 +1249,7 @@ class _HomePageState extends State<HomePage> {
         '${date.minute.toString().padLeft(2, '0')}';
   }
 
-  void deleteTransaction(int index) {
+  Future<void> deleteTransaction(int index) async {
     final transaction = transactions[index];
 
     showDialog(
@@ -1222,6 +1280,7 @@ class _HomePageState extends State<HomePage> {
                 if (debts < 0) debts = 0;
               });
 
+              await _saveTransactions();
               Navigator.pop(context);
             },
             child: const Text('حذف'),
@@ -1250,6 +1309,8 @@ class _HomePageState extends State<HomePage> {
         transaction.amount = newAmount;
         transaction.date = DateTime.now();
       });
+
+      await _saveTransactions();
     }
   }
 
