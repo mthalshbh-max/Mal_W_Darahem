@@ -1640,52 +1640,124 @@ class _HomePageState extends State<HomePage> {
                                 itemBuilder: (context, index) {
                                   final transaction =
                                       transactions[index];
-                                  final isMoney =
-                                      transaction.type == 'إضافة مال';
+
+                                  final type = transaction.type;
+
+                                  final bool isDeposit =
+                                      type == 'إضافة مال' ||
+                                      type.startsWith('إيداع في ');
+
+                                  final bool isWithdrawal =
+                                      type.startsWith('سحب من ');
+
+                                  final bool isTransfer =
+                                      type.startsWith('تحويل من ');
+
+                                  final bool isPersonTransfer =
+                                      type.startsWith('تحويل إلى ');
+
+                                  final bool isDebt =
+                                      type == 'إضافة دين';
+
+                                  final Color operationColor =
+                                      isDeposit
+                                          ? emerald
+                                          : isWithdrawal || isDebt
+                                              ? red
+                                              : isPersonTransfer
+                                                  ? gold
+                                                  : isTransfer
+                                                      ? blue
+                                                      : navy;
+
+                                  final IconData operationIcon =
+                                      isDeposit
+                                          ? Icons.arrow_downward_rounded
+                                          : isWithdrawal
+                                              ? Icons.arrow_upward_rounded
+                                              : isPersonTransfer
+                                                  ? Icons.person_add_alt_1_rounded
+                                                  : isTransfer
+                                                      ? Icons.swap_horiz_rounded
+                                                      : isDebt
+                                                          ? Icons.receipt_long_rounded
+                                                          : Icons.receipt_long_outlined;
+
+                                  final String amountPrefix =
+                                      isDeposit
+                                          ? '+'
+                                          : isWithdrawal || isDebt
+                                              ? '−'
+                                              : '';
 
                                   return Card(
+                                    margin:
+                                        const EdgeInsets.only(bottom: 8),
+                                    elevation: 1,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(14),
+                                    ),
                                     child: ListTile(
                                       contentPadding:
                                           const EdgeInsets.symmetric(
                                         horizontal: 12,
-                                        vertical: 4,
+                                        vertical: 6,
                                       ),
                                       leading: CircleAvatar(
+                                        radius: 24,
                                         backgroundColor:
-                                            (isMoney ? emerald : red)
-                                                .withOpacity(0.12),
+                                            operationColor.withOpacity(0.12),
                                         child: Icon(
-                                          isMoney
-                                              ? Icons.add_circle
-                                              : Icons.receipt_long,
-                                          color:
-                                              isMoney ? emerald : red,
+                                          operationIcon,
+                                          color: operationColor,
                                         ),
                                       ),
                                       title: Text(
-                                        transaction.type,
+                                        type,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      subtitle: Text(
-                                        formatDate(transaction.date),
+                                      subtitle: Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 5),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.schedule_rounded,
+                                              size: 15,
+                                              color:
+                                                  foreground.withOpacity(0.55),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                formatDate(
+                                                  transaction.date,
+                                                ),
+                                                overflow:
+                                                    TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            transaction.amount
-                                                .toStringAsFixed(2),
+                                            '$amountPrefix${transaction.amount.toStringAsFixed(2)}',
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: 15,
                                               fontWeight: FontWeight.bold,
-                                              color: isMoney
-                                                  ? emerald
-                                                  : red,
+                                              color: operationColor,
                                             ),
                                           ),
                                           IconButton(
+                                            tooltip: 'خيارات العملية',
                                             icon: const Icon(
                                               Icons.more_vert,
                                             ),
