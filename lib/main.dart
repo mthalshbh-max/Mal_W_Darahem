@@ -976,7 +976,87 @@ class _HomePageState extends State<HomePage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            Builder(
+                              builder: (context) {
+                                double deposits = 0;
+                                double withdrawals = 0;
+                                int count = 0;
+
+                                for (final transaction in transactions) {
+                                  final type = transaction.type;
+
+                                  if (type ==
+                                          'إيداع في ${wallet.name} - ${wallet.currency}' ||
+                                      type.startsWith('تحويل من ')) {
+                                    if (type.contains(
+                                        'إلى ${wallet.name} -')) {
+                                      deposits += transaction.amount;
+                                      count++;
+                                    } else if (type ==
+                                        'إيداع في ${wallet.name} - ${wallet.currency}') {
+                                      deposits += transaction.amount;
+                                      count++;
+                                    }
+                                  }
+
+                                  if (type ==
+                                      'سحب من ${wallet.name} - ${wallet.currency}') {
+                                    withdrawals += transaction.amount;
+                                    count++;
+                                  }
+
+                                  if (type.startsWith(
+                                      'تحويل من ${wallet.name} إلى ')) {
+                                    withdrawals += transaction.amount;
+                                    count++;
+                                  }
+                                }
+
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 7,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: foreground.withOpacity(0.05),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'إيداع ${deposits.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: emerald,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'سحب ${withdrawals.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: red,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '$count عملية',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: foreground.withOpacity(0.65),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
                             const SizedBox(height: 4),
+
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
