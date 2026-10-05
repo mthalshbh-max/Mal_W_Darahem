@@ -1019,7 +1019,9 @@ class _HomePageState extends State<HomePage> {
                                     vertical: 7,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: foreground.withOpacity(0.05),
+                                    color:
+                                        (darkMode ? Colors.white : navy)
+                                            .withOpacity(0.05),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Row(
@@ -1047,7 +1049,11 @@ class _HomePageState extends State<HomePage> {
                                         '$count عملية',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: foreground.withOpacity(0.65),
+                                          color:
+                                              (darkMode
+                                                      ? Colors.white
+                                                      : navy)
+                                                  .withOpacity(0.65),
                                         ),
                                       ),
                                     ],
