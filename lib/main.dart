@@ -376,6 +376,180 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
 
+
+  Future<void> changeWalletPin() async {
+    if (!_hasWalletPin) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('أنشئ رمز حماية للمحافظ أولًا من إدارة المحافظ.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    String? lockText;
+    try {
+      lockText = await _secureStorage.read(
+        key: 'wallet_pin_lockout_until',
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذّرت قراءة إعدادات حماية المحافظ. حاول مجددًا.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    final lockUntil = int.tryParse(lockText ?? '') ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    if (lockUntil > now) {
+      final seconds = (lockUntil - now + 999) ~/ 1000;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('المحافظ مقفلة مؤقتًا. حاول بعد $seconds ثانية.')),
+        );
+      }
+      return;
+    }
+
+    if (lockUntil != 0) {
+      await _secureStorage.delete(key: 'wallet_pin_lockout_until');
+      await _secureStorage.delete(key: 'wallet_pin_failed_attempts');
+    }
+
+    final oldController = TextEditingController();
+    final newController = TextEditingController();
+    final confirmController = TextEditingController();
+    String? error;
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) => AlertDialog(
+            title: const Text('تغيير رمز PIN'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: oldController,
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'رمز PIN الحالي',
+                    ),
+                  ),
+                  TextField(
+                    controller: newController,
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'رمز PIN الجديد',
+                    ),
+                  ),
+                  TextField(
+                    controller: confirmController,
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'تأكيد الرمز الجديد',
+                    ),
+                  ),
+                  if (error != null)
+                    Text(error!, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final oldPin = oldController.text.trim();
+                  final newPin = newController.text.trim();
+
+                  if (!RegExp(r'^\d{6}$').hasMatch(oldPin) ||
+                      !RegExp(r'^\d{6}$').hasMatch(newPin)) {
+                    setDialogState(() => error = 'أدخل كل رمز مكوّنًا من 6 أرقام.');
+                    return;
+                  }
+                  if (newPin != confirmController.text.trim()) {
+                    setDialogState(() => error = 'الرمز الجديد وتأكيده غير متطابقين.');
+                    return;
+                  }
+                  if (newPin == oldPin) {
+                    setDialogState(() => error = 'اختر رمزًا مختلفًا عن الرمز الحالي.');
+                    return;
+                  }
+
+                  try {
+                    if (!await _verifyWalletPin(oldPin)) {
+                      final stored = await _secureStorage.read(
+                        key: 'wallet_pin_failed_attempts',
+                      );
+                      final attempts = (int.tryParse(stored ?? '0') ?? 0) + 1;
+                      await _secureStorage.write(
+                        key: 'wallet_pin_failed_attempts',
+                        value: attempts.toString(),
+                      );
+
+                      if (attempts >= 5) {
+                        await _secureStorage.write(
+                          key: 'wallet_pin_lockout_until',
+                          value: (DateTime.now().millisecondsSinceEpoch + 60000).toString(),
+                        );
+                        Navigator.of(dialogContext).pop();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('تم قفل المحاولة لمدة 60 ثانية.')),
+                          );
+                        }
+                      } else {
+                        setDialogState(() {
+                          error = 'الرمز الحالي غير صحيح. المحاولة $attempts من 5.';
+                        });
+                      }
+                      return;
+                    }
+
+                    await _saveWalletPin(newPin);
+                    await _secureStorage.delete(key: 'wallet_pin_failed_attempts');
+                    await _secureStorage.delete(key: 'wallet_pin_lockout_until');
+                    if (mounted) {
+                      Navigator.of(dialogContext).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('تم تغيير رمز PIN بنجاح.')),
+                      );
+                    }
+                  } catch (_) {
+                    setDialogState(() => error = 'تعذّر حفظ الرمز. حاول مرة أخرى.');
+                  }
+                },
+                child: const Text('حفظ الرمز الجديد'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } finally {
+      oldController.dispose();
+      newController.dispose();
+      confirmController.dispose();
+    }
+  }
+
   void showCustomerData() {
     final nameController = TextEditingController(text: customer.name);
     final phoneController = TextEditingController(text: customer.phone);
@@ -2407,6 +2581,15 @@ onTap: () => showTransactionDetails(transaction),
                             title: const Text('المظهر والخلفية'),
                             trailing: const Icon(Icons.chevron_left),
                             onTap: showBackgroundColorPicker,
+                          ),
+                        ),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.security_outlined),
+                            title: const Text('الأمان والخصوصية'),
+                            subtitle: const Text('تغيير رمز PIN للمحافظ'),
+                            trailing: const Icon(Icons.chevron_left),
+                            onTap: changeWalletPin,
                           ),
                         ),
                         Card(
