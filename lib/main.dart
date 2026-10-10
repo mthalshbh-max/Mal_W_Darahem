@@ -1117,148 +1117,254 @@ class _HomePageState extends State<HomePage> {
                     ),
                   )
                 else
-                  ...wallets.map(
-                    (wallet) => Card(
-                      child: ListTile(
-                        leading: Text(
-                          wallet.flag,
-                          style: const TextStyle(fontSize: 28),
-                        ),
-                        title: Text(wallet.name),
-                        subtitle: Text(
-                          '${wallet.country} • ${wallet.currency}',
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                  ...wallets.map((wallet) {
+                    double deposits = 0;
+                    double withdrawals = 0;
+                    int count = 0;
+
+                    for (final transaction in transactions) {
+                      final type = transaction.type;
+
+                      if (type ==
+                          'إيداع في ${wallet.name} - ${wallet.currency}') {
+                        deposits += transaction.amount;
+                        count++;
+                      } else if (type ==
+                          'سحب من ${wallet.name} - ${wallet.currency}') {
+                        withdrawals += transaction.amount;
+                        count++;
+                      } else if (type.startsWith(
+                          'تحويل من ${wallet.name} إلى ')) {
+                        withdrawals += transaction.amount;
+                        count++;
+                      } else if (type.startsWith('تحويل من ') &&
+                          type.contains(' إلى ${wallet.name} -')) {
+                        deposits += transaction.amount;
+                        count++;
+                      }
+                    }
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      clipBehavior: Clip.antiAlias,
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              '${wallet.balance.toStringAsFixed(2)} ${wallet.currency}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Builder(
-                              builder: (context) {
-                                double deposits = 0;
-                                double withdrawals = 0;
-                                int count = 0;
-
-                                for (final transaction in transactions) {
-                                  final type = transaction.type;
-
-                                  if (type ==
-                                          'إيداع في ${wallet.name} - ${wallet.currency}' ||
-                                      type.startsWith('تحويل من ')) {
-                                    if (type.contains(
-                                        'إلى ${wallet.name} -')) {
-                                      deposits += transaction.amount;
-                                      count++;
-                                    } else if (type ==
-                                        'إيداع في ${wallet.name} - ${wallet.currency}') {
-                                      deposits += transaction.amount;
-                                      count++;
-                                    }
-                                  }
-
-                                  if (type ==
-                                      'سحب من ${wallet.name} - ${wallet.currency}') {
-                                    withdrawals += transaction.amount;
-                                    count++;
-                                  }
-
-                                  if (type.startsWith(
-                                      'تحويل من ${wallet.name} إلى ')) {
-                                    withdrawals += transaction.amount;
-                                    count++;
-                                  }
-                                }
-
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 7,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        (darkMode ? Colors.white : navy)
-                                            .withOpacity(0.05),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
+                            Row(
+                              children: [
+                                Text(
+                                  wallet.flag,
+                                  style: const TextStyle(fontSize: 30),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'إيداع ${deposits.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: emerald,
-                                          fontWeight: FontWeight.w600,
+                                        wallet.name,
+                                        style: const TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(height: 3),
                                       Text(
-                                        'سحب ${withdrawals.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: red,
-                                          fontWeight: FontWeight.w600,
+                                        '${wallet.country} • ${wallet.currency}',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    '${wallet.balance.toStringAsFixed(2)} ${wallet.currency}',
+                                    textAlign: TextAlign.end,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 9,
+                              ),
+                              decoration: BoxDecoration(
+                                color: (darkMode ? Colors.white : navy)
+                                    .withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Wrap(
+                                alignment: WrapAlignment.spaceAround,
+                                spacing: 12,
+                                runSpacing: 8,
+                                children: [
+                                  Text(
+                                    'الإيداعات: ${deposits.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      color: emerald,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'السحوبات: ${withdrawals.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      color: red,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$count عملية',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final buttonWidth =
+                                    (constraints.maxWidth - 16) / 3;
+
+                                return Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    SizedBox(
+                                      width: buttonWidth,
+                                      child: FilledButton.tonal(
+                                        onPressed: () =>
+                                            showDepositDialog(wallet),
+                                        child: const Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.add_circle_outline),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'إيداع',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
+                                    ),
+                                    SizedBox(
+                                      width: buttonWidth,
+                                      child: FilledButton.tonal(
+                                        onPressed: () =>
+                                            showWithdrawDialog(wallet),
+                                        child: const Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.remove_circle_outline),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'سحب',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: buttonWidth,
+                                      child: FilledButton.tonal(
+                                        onPressed: () =>
+                                            showTransferDialog(wallet),
+                                        child: const Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.swap_horiz),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'تحويل',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: (darkMode ? Colors.white : navy)
+                                      .withOpacity(0.12),
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline,
+                                        size: 19,
+                                      ),
+                                      SizedBox(width: 7),
                                       Text(
-                                        '$count عملية',
+                                        'شرح العمليات',
                                         style: TextStyle(
-                                          fontSize: 11,
-                                          color:
-                                              (darkMode
-                                                      ? Colors.white
-                                                      : navy)
-                                                  .withOpacity(0.65),
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ],
                                   ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 4),
-
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                TextButton.icon(
-                                  onPressed: () => showDepositDialog(wallet),
-                                  icon: const Icon(
-                                    Icons.add_circle_outline,
-                                    size: 18,
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    '• الإيداع: يضيف مبلغًا إلى رصيد هذه '
+                                    'المحفظة داخل التطبيق.',
                                   ),
-                                  label: const Text('إيداع'),
-                                ),
-                                TextButton.icon(
-                                  onPressed: () => showWithdrawDialog(wallet),
-                                  icon: const Icon(
-                                    Icons.remove_circle_outline,
-                                    size: 18,
+                                  const SizedBox(height: 5),
+                                  const Text(
+                                    '• السحب: يخصم مبلغًا من الرصيد '
+                                    'المتاح في المحفظة.',
                                   ),
-                                  label: const Text('سحب'),
-                                ),
-                                TextButton.icon(
-                                  onPressed: () => showTransferDialog(wallet),
-                                  icon: const Icon(
-                                    Icons.swap_horiz,
-                                    size: 18,
+                                  const SizedBox(height: 5),
+                                  const Text(
+                                    '• التحويل: ينقل مبلغًا بين المحافظ '
+                                    'المضافة، وفق العملة المدعومة.',
                                   ),
-                                  label: const Text('تحويل'),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'ملاحظة: العمليات الحالية داخلية؛ '
+                                    'ولا ترسل أموالًا حقيقية إلى بنك أو '
+                                    'شخص أو ماكينة ATM أو شبكة Bitcoin.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: darkMode
+                                          ? Colors.amber.shade200
+                                          : Colors.brown.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
