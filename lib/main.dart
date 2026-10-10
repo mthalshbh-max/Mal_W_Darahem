@@ -444,7 +444,164 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showWithdrawDialog(Wallet wallet) {
+  Future<bool> _ensureWalletUnlocked() async {
+    if (_walletsUnlocked) return true;
+
+    // اقرأ إعدادات الحماية قبل عرض إنشاء رمز جديد.
+    try {
+      await _loadWalletSecurity();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذّرت قراءة إعدادات حماية المحافظ. حاول مجددًا.'),
+          ),
+        );
+      }
+      return false;
+    }
+
+    if (!mounted) return false;
+
+    final pinController = TextEditingController();
+    final confirmController = TextEditingController();
+    String? errorMessage;
+    int attempts = 0;
+
+    try {
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return StatefulBuilder(
+            builder: (dialogContext, setDialogState) {
+              return AlertDialog(
+                title: Text(
+                  _hasWalletPin
+                      ? 'فتح المحافظ'
+                      : 'إنشاء رمز حماية للمحافظ',
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _hasWalletPin
+                            ? 'أدخل رمز الحماية المكوّن من 6 أرقام.'
+                            : 'أنشئ رمزًا من 6 أرقام لحماية محافظك.',
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: pinController,
+                        keyboardType: TextInputType.number,
+                        obscureText: true,
+                        maxLength: 6,
+                        decoration: const InputDecoration(
+                          labelText: 'رمز الحماية',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      if (!_hasWalletPin)
+                        TextField(
+                          controller: confirmController,
+                          keyboardType: TextInputType.number,
+                          obscureText: true,
+                          maxLength: 6,
+                          decoration: const InputDecoration(
+                            labelText: 'تأكيد رمز الحماية',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      if (errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            errorMessage!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.of(dialogContext).pop(false),
+                    child: const Text('إلغاء'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final pin = pinController.text.trim();
+
+                      if (!RegExp(r'^\d{6}$').hasMatch(pin)) {
+                        setDialogState(() {
+                          errorMessage = 'أدخل 6 أرقام صحيحة.';
+                        });
+                        return;
+                      }
+
+                      try {
+                        if (!_hasWalletPin) {
+                          if (confirmController.text.trim() != pin) {
+                            setDialogState(() {
+                              errorMessage = 'الرمزان غير متطابقين.';
+                            });
+                            return;
+                          }
+
+                          await _saveWalletPin(pin);
+                          if (!mounted) return;
+                          Navigator.of(dialogContext).pop(true);
+                          return;
+                        }
+
+                        final valid = await _verifyWalletPin(pin);
+
+                        if (valid) {
+                          if (!mounted) return;
+                          setState(() {
+                            _walletsUnlocked = true;
+                          });
+                          Navigator.of(dialogContext).pop(true);
+                        } else {
+                          attempts++;
+                          if (attempts >= 5) {
+                            Navigator.of(dialogContext).pop(false);
+                          } else {
+                            setDialogState(() {
+                              errorMessage =
+                                  'الرمز غير صحيح. المحاولة '
+                                  '$attempts من 5.';
+                            });
+                          }
+                        }
+                      } catch (_) {
+                        setDialogState(() {
+                          errorMessage =
+                              'تعذّر التحقق من الرمز. حاول مرة أخرى.';
+                        });
+                      }
+                    },
+                    child: Text(
+                      _hasWalletPin ? 'فتح' : 'حفظ الرمز',
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+
+      return result == true && _walletsUnlocked;
+    } finally {
+      pinController.dispose();
+      confirmController.dispose();
+    }
+  }
+
+  Future<void> showWithdrawDialog(Wallet wallet) async {
+    if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
     final amountController = TextEditingController();
 
     showDialog(
@@ -522,7 +679,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showDepositDialog(Wallet wallet) {
+  Future<void> showDepositDialog(Wallet wallet) async {
+    if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
     final amountController = TextEditingController();
 
     showDialog(
@@ -591,7 +749,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showPersonTransferDialog() {
+  Future<void> showPersonTransferDialog() async {
+    if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
     if (wallets.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -754,7 +913,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showTransferDialog(Wallet sourceWallet) {
+  Future<void> showTransferDialog(Wallet sourceWallet) async {
+    if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
     final amountController = TextEditingController();
     Wallet? destinationWallet;
 
@@ -887,7 +1047,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showWallets() {
+  Future<void> showWallets() async {
+    if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -1123,7 +1285,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showAddWalletDialog() {
+  Future<void> showAddWalletDialog() async {
+    if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
     final nameController = TextEditingController();
     final countryController = TextEditingController();
     final currencyController = TextEditingController();
