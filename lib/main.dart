@@ -469,9 +469,42 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Future<bool> _ensureWalletUnlocked() async {
     if (_walletsUnlocked) return true;
 
+    int attempts = 0;
+
     // اقرأ إعدادات الحماية قبل عرض إنشاء رمز جديد.
     try {
       await _loadWalletSecurity();
+
+      final lockoutText = await _secureStorage.read(
+        key: 'wallet_pin_lockout_until',
+      );
+      final lockoutUntil = int.tryParse(lockoutText ?? '') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      if (lockoutUntil > now) {
+        final remaining = ((lockoutUntil - now + 999) ~/ 1000);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'تم قفل المحافظ مؤقتًا. حاول بعد $remaining ثانية.',
+              ),
+            ),
+          );
+        }
+        return false;
+      }
+
+      if (lockoutUntil != 0) {
+        await _secureStorage.delete(key: 'wallet_pin_lockout_until');
+        await _secureStorage.delete(key: 'wallet_pin_failed_attempts');
+      }
+
+      attempts = int.tryParse(
+        (await _secureStorage.read(
+          key: 'wallet_pin_failed_attempts',
+        )) ?? '0',
+      ) ?? 0;
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -488,7 +521,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final pinController = TextEditingController();
     final confirmController = TextEditingController();
     String? errorMessage;
-    int attempts = 0;
 
     try {
       final result = await showDialog<bool>(
@@ -580,6 +612,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         final valid = await _verifyWalletPin(pin);
 
                         if (valid) {
+                          await _secureStorage.delete(
+                            key: 'wallet_pin_failed_attempts',
+                          );
+                          await _secureStorage.delete(
+                            key: 'wallet_pin_lockout_until',
+                          );
                           if (!mounted) return;
                           setState(() {
                             _walletsUnlocked = true;
@@ -587,7 +625,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           Navigator.of(dialogContext).pop(true);
                         } else {
                           attempts++;
+                          await _secureStorage.write(
+                            key: 'wallet_pin_failed_attempts',
+                            value: attempts.toString(),
+                          );
                           if (attempts >= 5) {
+                            await _secureStorage.write(
+                              key: 'wallet_pin_lockout_until',
+                              value: (DateTime.now()
+                                      .millisecondsSinceEpoch +
+                                  60000)
+                                  .toString(),
+                            );
                             Navigator.of(dialogContext).pop(false);
                           } else {
                             setDialogState(() {
