@@ -143,11 +143,32 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeAppData();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      if (!mounted) return;
+      setState(() {
+        _walletsUnlocked = false;
+        if (_selectedPage == 2) {
+          _selectedPage = 0;
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _initializeAppData() async {
@@ -2379,7 +2400,13 @@ onTap: () => showTransactionDetails(transaction),
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _selectedPage,
-            onDestinationSelected: (index) {
+            onDestinationSelected: (index) async {
+              if ((index == 1 || index == 2) &&
+                  !_walletsUnlocked) {
+                final unlocked = await _ensureWalletUnlocked();
+                if (!unlocked || !mounted) return;
+              }
+              if (!mounted) return;
               setState(() => _selectedPage = index);
             },
             destinations: const [
