@@ -1144,6 +1144,8 @@ class _HomePageState extends State<HomePage> {
                       }
                     }
 
+                    final netMovement = deposits - withdrawals;
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 14),
                       clipBehavior: Clip.antiAlias,
@@ -1220,6 +1222,14 @@ class _HomePageState extends State<HomePage> {
                                     'السحوبات: ${withdrawals.toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       color: red,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'صافي الحركة: ${netMovement.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      color: netMovement < 0 ? red : emerald,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
