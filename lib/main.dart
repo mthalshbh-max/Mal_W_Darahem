@@ -881,7 +881,7 @@ class _HomePageState extends State<HomePage> {
                       transactions.insert(
                         0,
                         Transaction(
-                          type: 'تحويل إلى $name - $phone',
+                          type: 'تحويل من ${sourceWallet.name} إلى $name - $phone - ${sourceWallet.currency}',
                           amount: amount,
                           date: DateTime.now(),
                         ),
