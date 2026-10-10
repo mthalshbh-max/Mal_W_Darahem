@@ -169,6 +169,7 @@ class _HomePageState extends State<HomePage> {
 
   Color backgroundTint = Colors.white;
   bool darkMode = false;
+  int _selectedPage = 0;
 
   final List<Transaction> transactions = [];
   final List<Wallet> wallets = [];
@@ -2000,6 +2001,7 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
                   child: Column(
                     children: [
+                      if (_selectedPage == 0) ...[
                       Align(
                         alignment: Alignment.centerRight,
                         child: Text(
@@ -2059,6 +2061,31 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
+                      Container(
+                        width: double.infinity,
+                        constraints: const BoxConstraints(minHeight: 64),
+                        margin: const EdgeInsets.only(top: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.campaign_outlined),
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                'مساحة إعلانية تجريبية',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ],
+                      if (_selectedPage == 2) ...[
                       const SizedBox(height: 20),
                       Align(
                         alignment: Alignment.centerRight,
@@ -2072,6 +2099,29 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        constraints: const BoxConstraints(minHeight: 64),
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.campaign_outlined),
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                'مساحة إعلانية تجريبية',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       Expanded(
                         child: transactions.isEmpty
                             ? Center(
@@ -2232,9 +2282,126 @@ onTap: () => showTransactionDetails(transaction),
                                 },
                               ),
                       ),
+                      ],
+                      if (_selectedPage == 1) ...[
+                        const SizedBox(height: 20),
+                        const Icon(
+                          Icons.account_balance_wallet_outlined,
+                          size: 54,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'المحافظ',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('إدارة أرصدتك ومحافظك من هنا'),
+                        Expanded(
+                          child: Center(
+                            child: ElevatedButton.icon(
+                              onPressed: showWallets,
+                              icon: const Icon(Icons.account_balance_wallet),
+                              label: const Text('فتح إدارة المحافظ'),
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (_selectedPage == 3) ...[
+                        const SizedBox(height: 12),
+                        const Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'الإعدادات',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.person_outline),
+                            title: const Text('بيانات العميل'),
+                            subtitle: const Text('عرض وتعديل بيانات العميل'),
+                            trailing: const Icon(Icons.chevron_left),
+                            onTap: showCustomerData,
+                          ),
+                        ),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.palette_outlined),
+                            title: const Text('المظهر والخلفية'),
+                            trailing: const Icon(Icons.chevron_left),
+                            onTap: showBackgroundColorPicker,
+                          ),
+                        ),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.lock_outline),
+                            title: const Text('المحافظ وحمايتها'),
+                            trailing: const Icon(Icons.chevron_left),
+                            onTap: showWallets,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          constraints: const BoxConstraints(minHeight: 64),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.campaign_outlined),
+                              SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'مساحة إعلانية تجريبية',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _selectedPage,
+            onDestinationSelected: (index) {
+              setState(() => _selectedPage = index);
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'الرئيسية',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                selectedIcon: Icon(Icons.account_balance_wallet),
+                label: 'المحافظ',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long),
+                label: 'العمليات',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: 'الإعدادات',
               ),
             ],
           ),
