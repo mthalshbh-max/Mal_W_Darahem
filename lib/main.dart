@@ -1056,7 +1056,10 @@ class _HomePageState extends State<HomePage> {
       isScrollControlled: true,
       builder: (context) {
         return SafeArea(
-          child: Padding(
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.85,
+            child: SingleChildScrollView(
+              child: Padding(
             padding: const EdgeInsets.fromLTRB(18, 10, 18, 25),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1108,6 +1111,29 @@ class _HomePageState extends State<HomePage> {
 
                 const SizedBox(height: 15),
 
+                Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(minHeight: 64),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.campaign_outlined),
+                      SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'مساحة إعلانية تجريبية — لم يتم ربط شبكة إعلانات بعد',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 if (wallets.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(20),
@@ -1393,14 +1419,15 @@ class _HomePageState extends State<HomePage> {
                     label: const Text('إضافة محفظة'),
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
           ),
-        );
-      },
-    );
-  }
-
+        ),
+      );
+    },
+  );
+}
   Future<void> showAddWalletDialog() async {
     if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
     final nameController = TextEditingController();
