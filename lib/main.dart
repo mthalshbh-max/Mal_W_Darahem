@@ -1720,6 +1720,72 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void showTransactionDetails(Transaction transaction) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('تفاصيل العملية'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _detailRow('نوع العملية', transaction.type),
+              _detailRow(
+                'المبلغ',
+                transaction.amount.toStringAsFixed(2),
+              ),
+              _detailRow(
+                'التاريخ',
+                formatDate(transaction.date),
+              ),
+              _detailRow(
+                'الوقت',
+                TimeOfDay.fromDateTime(transaction.date)
+                    .format(dialogContext),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'هذه التفاصيل محفوظة داخل التطبيق، '
+                'ولا تُعد إثباتًا لتحويل مالي حقيقي.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('إغلاق'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void showTransactionOptions(int index) {
     showModalBottomSheet(
       context: context,
@@ -2054,6 +2120,7 @@ class _HomePageState extends State<HomePage> {
                                           BorderRadius.circular(14),
                                     ),
                                     child: ListTile(
+onTap: () => showTransactionDetails(transaction),
                                       contentPadding:
                                           const EdgeInsets.symmetric(
                                         horizontal: 12,
