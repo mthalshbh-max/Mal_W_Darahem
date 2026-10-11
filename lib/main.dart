@@ -1292,6 +1292,101 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
+
+  Future<void> showAccountBook() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.menu_book_outlined, size: 28),
+                    SizedBox(width: 10),
+                    Text(
+                      'دفتر حساباتي',
+                      style: TextStyle(
+                        fontSize: 23,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                moneyCard(
+                  title: 'الرصيد الحالي',
+                  value: balance.toStringAsFixed(2),
+                  icon: Icons.account_balance_wallet,
+                  color: emerald,
+                ),
+                moneyCard(
+                  title: 'إجمالي الديون',
+                  value: debts.toStringAsFixed(2),
+                  icon: Icons.receipt_long,
+                  color: red,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: addMoney,
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('إضافة مال'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: gold,
+                          foregroundColor: navy,
+                        ),
+                        onPressed: addDebt,
+                        icon: const Icon(Icons.receipt_long),
+                        label: const Text('إضافة دين'),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(minHeight: 64),
+                  margin: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.campaign_outlined),
+                      SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'مساحة إعلانية تجريبية',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> showWallets() async {
     if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
     if (!mounted) return;
@@ -2175,6 +2270,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                IconButton(
+                  tooltip: 'دفتر حساباتي',
+                  icon: const Icon(Icons.menu_book_outlined),
+                  onPressed: showAccountBook,
+                ),
                 Container(
                   width: 42,
                   height: 42,
@@ -2272,68 +2372,35 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 18),
-                      moneyCard(
-                        title: 'الرصيد الحالي',
-                        value: balance.toStringAsFixed(2),
-                        icon: Icons.account_balance_wallet,
-                        color: emerald,
-                      ),
-                      moneyCard(
-                        title: 'إجمالي الديون',
-                        value: debts.toStringAsFixed(2),
-                        icon: Icons.receipt_long,
-                        color: red,
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: addMoney,
-                              icon: const Icon(Icons.add_circle_outline),
-                              label: const Text('إضافة مال'),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: gold,
-                                foregroundColor: navy,
-                              ),
-                              onPressed: addDebt,
-                              icon: const Icon(Icons.receipt_long),
-                              label: const Text('إضافة دين'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        width: double.infinity,
-                        constraints: const BoxConstraints(minHeight: 64),
-                        margin: const EdgeInsets.only(top: 12),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      const SizedBox(height: 28),
+                      Center(
+                        child: Column(
                           children: [
-                            Icon(Icons.campaign_outlined),
-                            SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                'مساحة إعلانية تجريبية',
-                                textAlign: TextAlign.center,
+                            Icon(
+                              Icons.menu_book_outlined,
+                              size: 58,
+                              color: emerald,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'رصيدك وديونك في مكان واحد',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'افتح دفتر حساباتي من شريط التطبيق '
+                              'لإدارة رصيدك وديونك.',
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
                       ),
-                      ],
-                      if (_selectedPage == 2) ...[
+                    ],
+                    if (_selectedPage == 2) ...[
                       const SizedBox(height: 20),
                       Align(
                         alignment: Alignment.centerRight,
