@@ -1295,7 +1295,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Future<void> showWallets() async {
     if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
     if (!mounted) return;
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
@@ -1672,6 +1672,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       );
     },
   );
+    if (mounted) {
+      setState(() => _walletsUnlocked = false);
+    }
+
 }
   Future<void> showAddWalletDialog() async {
     if (!_walletsUnlocked && !(await _ensureWalletUnlocked())) return;
