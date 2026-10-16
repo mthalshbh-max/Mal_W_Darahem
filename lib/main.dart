@@ -2233,6 +2233,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
+  Future<void> _handleDestinationSelected(int index) async {
+    if ((index == 1 || index == 2) && !_walletsUnlocked) {
+      final unlocked = await _ensureWalletUnlocked();
+      if (!unlocked || !mounted) return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _selectedPage = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final foreground = darkMode ? Colors.white : navy;
@@ -2688,15 +2699,7 @@ onTap: () => showTransactionDetails(transaction),
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _selectedPage,
-            onDestinationSelected: (index) async {
-              if ((index == 1 || index == 2) &&
-                  !_walletsUnlocked) {
-                final unlocked = await _ensureWalletUnlocked();
-                if (!unlocked || !mounted) return;
-              }
-              if (!mounted) return;
-              setState(() => _selectedPage = index);
-            },
+            onDestinationSelected: _handleDestinationSelected,
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.home_outlined),
