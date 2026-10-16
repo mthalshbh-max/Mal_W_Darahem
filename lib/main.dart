@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MobileAds.instance.initialize();
+  // TEMP TEST: AdMob initialization disabled.
   runApp(const MalWDarahemApp());
 }
 
@@ -1360,7 +1360,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
-                const AdMobBannerSlot(),
+                const SizedBox.shrink(),
               ],
             ),
           ),
