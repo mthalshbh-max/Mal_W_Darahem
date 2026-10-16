@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // TEMP TEST: AdMob initialization disabled.
-  runApp(const MalWDarahemApp());
+  runApp(const MaterialApp(home: Scaffold(body: Center(child: Text("اختبار تشغيل التطبيق")))));
 }
 
 class MalWDarahemApp extends StatelessWidget {
