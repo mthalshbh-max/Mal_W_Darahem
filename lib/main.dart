@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'admob_banner.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await MobileAds.instance.initialize();
   runApp(const MalWDarahemApp());
 }
 
@@ -1356,27 +1360,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
-                Container(
-                  width: double.infinity,
-                  constraints: const BoxConstraints(minHeight: 64),
-                  margin: const EdgeInsets.only(top: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.campaign_outlined),
-                      SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'مساحة إعلانية تجريبية',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
+                const AdMobBannerSlot(),
+                      ],
                   ),
                 ),
               ],

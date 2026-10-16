@@ -25,6 +25,10 @@ jobs:
       - name: Create Android project
         run: flutter create --platforms=android .
 
+      - name: Configure AdMob application ID
+        run: |
+          python3 -c 'from pathlib import Path; p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text(); tag="    <meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"ca-app-pub-5144743286442793~4292951806\"/>"; assert "</application>" in s, "application tag missing"; s=s.replace("</application>", tag+"\n    </application>", 1) if "com.google.android.gms.ads.APPLICATION_ID" not in s else s; p.write_text(s)'
+
       - name: Prepare app icon
         run: |
           sudo apt-get update
