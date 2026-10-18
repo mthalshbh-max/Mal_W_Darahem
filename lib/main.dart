@@ -9,7 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // TEMP DIAGNOSTIC: AdMob initialization disabled.
+
+  try {
+    await MobileAds.instance.initialize();
+  } catch (error) {
+    debugPrint('تعذر تهيئة AdMob: $error');
+  }
+
   runApp(const MalWDarahemApp());
 }
 
@@ -176,10 +182,33 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _initializeAppData() async {
-    await _loadWalletSecurity();
-    await _loadCustomer();
-    await _loadWallets();
-    await _loadTransactions();
+    try {
+      await _loadWalletSecurity();
+    } catch (error, stackTrace) {
+      debugPrint('تعذر تحميل إعدادات حماية المحافظ: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    try {
+      await _loadCustomer();
+    } catch (error, stackTrace) {
+      debugPrint('تعذر تحميل بيانات العميل: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    try {
+      await _loadWallets();
+    } catch (error, stackTrace) {
+      debugPrint('تعذر تحميل المحافظ: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    try {
+      await _loadTransactions();
+    } catch (error, stackTrace) {
+      debugPrint('تعذر تحميل سجل العمليات: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
@@ -284,9 +313,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getStringList("wallets");
     if (saved == null) return;
-    final loaded = saved.map((item) {
-      return Wallet.fromJson(jsonDecode(item) as Map<String, dynamic>);
-    }).toList();
+
+    final loaded = <Wallet>[];
+    try {
+      for (final item in saved) {
+        final decoded = jsonDecode(item);
+        if (decoded is! Map<String, dynamic>) {
+          throw const FormatException('بيانات محفظة غير صالحة');
+        }
+        loaded.add(Wallet.fromJson(decoded));
+      }
+    } catch (error, stackTrace) {
+      debugPrint('تعذر تحميل المحافظ؛ احتُفظ بالبيانات المحفوظة دون تعديل: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return;
+    }
 
     if (customer.phone.isNotEmpty) {
       for (final wallet in loaded) {
@@ -2331,7 +2372,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
                   child: Column(
                     children: [
-                      if (_selectedPage == 0) ...[
+                      if (_selectedPage == 0) Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
                       Align(
                         alignment: Alignment.centerRight,
                         child: Text(
@@ -2381,7 +2425,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           ],
                         ),
                       ),
-                    ],
+                            ],
+                          ),
+                        ),
+                      ),
                     if (_selectedPage == 2) ...[
                       const SizedBox(height: 20),
                       Align(
@@ -2606,7 +2653,10 @@ onTap: () => showTransactionDetails(transaction),
                           ),
                         ),
                       ],
-                      if (_selectedPage == 3) ...[
+                      if (_selectedPage == 3) Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
                         const SizedBox(height: 12),
                         const Align(
                           alignment: Alignment.centerRight,
@@ -2676,7 +2726,10 @@ onTap: () => showTransactionDetails(transaction),
                             ],
                           ),
                         ),
-                      ],
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

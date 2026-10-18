@@ -16,7 +16,7 @@ class _AdMobBannerSlotState extends State<AdMobBannerSlot> {
   void initState() {
     super.initState();
     final banner = BannerAd(
-      adUnitId: "ca-app-pub-3940256099942544/6300978111",
+      adUnitId: "ca-app-pub-5144743286442793/3493131178",
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
