@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'admob_banner.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -9,12 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  try {
-    await MobileAds.instance.initialize();
-  } catch (error) {
-    debugPrint('تعذر تهيئة AdMob: $error');
-  }
 
   runApp(const MalWDarahemApp());
 }
