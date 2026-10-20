@@ -1,3 +1,6 @@
+import 'language_settings.dart';
+import 'app_language.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -5,8 +8,15 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+ try {
+  await loadAppLanguage();
+} catch (error) {
+  debugPrint('تعذر تحميل اللغة المحفوظة: $error');;
+  }
   runApp(const MalWDarahemApp());
+
 }
 
 class MalWDarahemApp extends StatelessWidget {
@@ -21,7 +31,13 @@ class MalWDarahemApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+   return ValueListenableBuilder<Locale>(
+  valueListenable: appLocale,
+  builder: (context, locale, child) {
     return MaterialApp(
+      locale: locale,
+      supportedLocales: supportedLanguageCodes.map((code) => Locale(code)).toList(),
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       debugShowCheckedModeBanner: false,
       title: 'مال ودراهم',
       theme: ThemeData(
@@ -57,6 +73,8 @@ class MalWDarahemApp extends StatelessWidget {
       ),
       home: const HomePage(),
     );
+  },
+);
   }
 }
 
@@ -2414,29 +2432,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        constraints: const BoxConstraints(minHeight: 64),
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.campaign_outlined),
-                            SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                'مساحة إعلانية تجريبية',
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      const SizedBox.shrink(),
                       Expanded(
                         child: transactions.isEmpty
                             ? Center(
@@ -2652,6 +2648,21 @@ onTap: () => showTransactionDetails(transaction),
                             title: const Text('المظهر والخلفية'),
                             trailing: const Icon(Icons.chevron_left),
                             onTap: showBackgroundColorPicker,
+                          ),
+                        ),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.language, color: Color(0xFF0F8B5F)),
+                            title: const Text('اللغات'),
+                            subtitle: const Text('اختيار لغة التطبيق'),
+                            trailing: const Icon(Icons.chevron_left),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const LanguageSettingsPage(),
+                                ),
+                              );
+                            },
                           ),
                         ),
                         Card(
