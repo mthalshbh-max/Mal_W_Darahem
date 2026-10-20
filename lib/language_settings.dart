@@ -69,14 +69,41 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
     'fil': 'Filipino',
   };
 
+  final languageFlags = const {
+    'ar': '🇸🇦', 'en': '🇬🇧', 'fr': '🇫🇷',
+    'es': '🇪🇸', 'de': '🇩🇪', 'it': '🇮🇹',
+    'pt': '🇵🇹', 'ru': '🇷🇺', 'zh': '🇨🇳',
+    'ja': '🇯🇵', 'ko': '🇰🇷', 'hi': '🇮🇳',
+    'ur': '🇵🇰', 'tr': '🇹🇷', 'fa': '🇮🇷',
+    'id': '🇮🇩', 'ms': '🇲🇾', 'bn': '🇧🇩',
+    'sw': '🇰🇪', 'nl': '🇳🇱', 'pl': '🇵🇱',
+    'uk': '🇺🇦', 'el': '🇬🇷', 'he': '🇮🇱',
+    'th': '🇹🇭', 'vi': '🇻🇳', 'sv': '🇸🇪',
+    'no': '🇳🇴', 'da': '🇩🇰', 'fi': '🇫🇮',
+    'ro': '🇷🇴', 'hu': '🇭🇺', 'cs': '🇨🇿',
+    'sr': '🇷🇸', 'am': '🇪🇹', 'ta': '🇮🇳',
+    'fil': '🇵🇭',
+  };
+
   Future<void> choose(String code) async {
-    final prefs = await SharedPreferences.getInstance();
-   await saveAppLanguage(code);
-    if (!mounted) return;
+    if (!languages.containsKey(code)) return;
+
     setState(() => selected = code);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('تم حفظ اللغة: ${languages[code]}')),
-    );
+
+    try {
+      await saveAppLanguage(code);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم حفظ اللغة: ${languages[code]}'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر حفظ اللغة')),
+      );
+    }
   }
 
   @override
@@ -119,9 +146,18 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
                 return RadioListTile<String>(
                   value: item.key,
                   groupValue: selected,
-                  title: Text(item.value),
+                  title: Row(
+                    children: [
+                      Text(languageFlags[item.key] ?? '🌐',
+                          style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(item.value)),
+                    ],
+                  ),
                   subtitle: Text(item.key),
-                  secondary: const Icon(Icons.language),
+                  secondary: selected == item.key
+                      ? const Icon(Icons.check_circle, color: Colors.green)
+                      : const Icon(Icons.language),
                   onChanged: (value) {
                     if (value != null) choose(value);
                   },
