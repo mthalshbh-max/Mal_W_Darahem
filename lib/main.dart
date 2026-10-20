@@ -1,5 +1,6 @@
 import 'language_settings.dart';
 import 'app_language.dart';
+import 'app_strings.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -39,7 +40,7 @@ class MalWDarahemApp extends StatelessWidget {
       supportedLocales: supportedLanguageCodes.map((code) => Locale(code)).toList(),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       debugShowCheckedModeBanner: false,
-      title: 'مال ودراهم',
+      title: appText('مال ودراهم'),
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -2273,7 +2274,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         darkMode ? const Color(0xFF0B1724) : backgroundTint;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: appTextDirection,
       child: Theme(
         data: Theme.of(context).copyWith(
           brightness: darkMode ? Brightness.dark : Brightness.light,
@@ -2289,7 +2290,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  tooltip: 'دفتر حساباتي',
+                  tooltip: appText('دفتر حساباتي'),
                   icon: const Icon(Icons.menu_book_outlined),
                   onPressed: showAccountBook,
                 ),
@@ -2318,8 +2319,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'مال ودراهم',
+                Text(
+                  appText('مال ودراهم'),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
@@ -2328,17 +2329,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
             actions: [
               IconButton(
-                tooltip: 'بيانات العميل',
+                tooltip: appText('بيانات العميل'),
                 icon: const Icon(Icons.person_outline),
                 onPressed: showCustomerData,
               ),
               IconButton(
-                tooltip: 'المحافظ',
+                tooltip: appText('المحافظ'),
                 icon: const Icon(Icons.account_balance_wallet_outlined),
                 onPressed: showWallets,
               ),
               IconButton(
-                tooltip: 'المظهر',
+                tooltip: appText('المظهر'),
                 icon: const Icon(Icons.palette_outlined),
                 onPressed: showBackgroundColorPicker,
               ),
@@ -2723,26 +2724,26 @@ onTap: () => showTransactionDetails(transaction),
               if (!mounted) return;
               setState(() => _selectedPage = index);
             },
-            destinations: const [
+            destinations: [
               NavigationDestination(
                 icon: Icon(Icons.home_outlined),
                 selectedIcon: Icon(Icons.home),
-                label: 'الرئيسية',
+                label: appText('الرئيسية'),
               ),
               NavigationDestination(
                 icon: Icon(Icons.account_balance_wallet_outlined),
                 selectedIcon: Icon(Icons.account_balance_wallet),
-                label: 'المحافظ',
+                label: appText('المحافظ'),
               ),
               NavigationDestination(
                 icon: Icon(Icons.receipt_long_outlined),
                 selectedIcon: Icon(Icons.receipt_long),
-                label: 'العمليات',
+                label: appText('العمليات'),
               ),
               NavigationDestination(
                 icon: Icon(Icons.settings_outlined),
                 selectedIcon: Icon(Icons.settings),
-                label: 'الإعدادات',
+                label: appText('الإعدادات'),
               ),
             ],
           ),
